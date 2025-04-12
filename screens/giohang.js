@@ -1,51 +1,47 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  removeFromCart,
+  increaseQuantity,
+  decreaseQuantity,
+  clearCart,
+} from '../redux/Slide/CartSlide';
 
-const CartScreen = () => {
-  // Danh sách sản phẩm trong giỏ hàng
-  const [cartItems, setCartItems] = useState([
-    { id: '1', name: 'Spider Plant', price: 250000, quantity: 2, image: 'https://via.placeholder.com/80' },
-  ]);
+const CartScreen = ({ navigation }) => {
+  const cartItems = useSelector(state => state.cart.items);
+  const dispatch = useDispatch();
 
-  // Xóa sản phẩm khỏi giỏ hàng
-  const removeItem = (id) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
-  };
+  const totalPrice = cartItems.reduce(
+    (total, item) => total + item.product.price * item.quantity,
+    0
+  );
 
-  // Tính tổng tiền
-  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-
-  // Render mỗi sản phẩm trong giỏ hàng
   const renderItem = ({ item }) => (
     <View style={styles.cartItem}>
-      {/* Checkbox */}
-      <TouchableOpacity style={styles.checkbox}>
-        <Ionicons name="checkmark" size={20} color="black" />
-      </TouchableOpacity>
+      {/* Product Image */}
+      <Image source={{ uri: item.product.avatar }} style={styles.productImage} />
 
-      {/* Hình ảnh sản phẩm */}
-      <Image source={{ uri: item.image }} style={styles.productImage} />
-
-      {/* Thông tin sản phẩm */}
+      {/* Product Info */}
       <View style={styles.productDetails}>
-        <Text style={styles.productName}>{item.name} | Ưa bóng</Text>
-        <Text style={styles.productPrice}>{item.price.toLocaleString()}đ</Text>
+        <Text style={styles.productName}>{item.product.name}</Text>
+        <Text style={styles.productPrice}>{item.product.price.toLocaleString()}đ</Text>
       </View>
 
-      {/* Số lượng sản phẩm */}
+      {/* Quantity Controls */}
       <View style={styles.quantityContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => dispatch(decreaseQuantity(item.product.id))}>
           <Ionicons name="remove-circle-outline" size={20} color="black" />
         </TouchableOpacity>
         <Text style={styles.quantity}>{item.quantity}</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => dispatch(increaseQuantity(item.product.id))}>
           <Ionicons name="add-circle-outline" size={20} color="black" />
         </TouchableOpacity>
       </View>
 
-      {/* Nút xóa */}
-      <TouchableOpacity onPress={() => removeItem(item.id)}>
+      {/* Remove Item */}
+      <TouchableOpacity onPress={() => dispatch(removeFromCart(item.product.id))}>
         <Text style={styles.deleteText}>Xoá</Text>
       </TouchableOpacity>
     </View>
@@ -53,30 +49,32 @@ const CartScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Tiêu đề */}
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.title}>GIỎ HÀNG</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => dispatch(clearCart())}>
           <Ionicons name="trash-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
 
-      {/* Danh sách sản phẩm */}
+      {/* Cart List */}
       <FlatList
         data={cartItems}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.product.id.toString()}
         renderItem={renderItem}
+        ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 50 }}>Giỏ hàng đang trống</Text>}
       />
 
-      {/* Tổng tiền & nút thanh toán */}
+      {/* Total and Checkout */}
       <View style={styles.footer}>
         <Text style={styles.totalText}>Tạm tính</Text>
         <Text style={styles.totalPrice}>{totalPrice.toLocaleString()}đ</Text>
       </View>
-      <TouchableOpacity style={styles.checkoutButton}>
+
+      <TouchableOpacity style={styles.checkoutButton} onPress={() => alert('Proceed to checkout')}>
         <Text style={styles.checkoutText}>Tiến hành thanh toán</Text>
         <Ionicons name="chevron-forward" size={20} color="white" />
       </TouchableOpacity>
@@ -110,9 +108,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     marginBottom: 10,
-  },
-  checkbox: {
-    marginRight: 10,
   },
   productImage: {
     width: 50,

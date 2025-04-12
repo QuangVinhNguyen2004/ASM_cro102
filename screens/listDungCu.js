@@ -1,32 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { api1 } from '../api1';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchDungCu } from '../redux/Slide/DungCuSlide';
 
 const ListDungCu = () => {
-  const [dungcuData, setdungcuData] = useState([]); // Dữ liệu chậu cây từ API
-  const [loading, setLoading] = useState(true);
-  const navigation = useNavigation(); // Lấy đối tượng navigation
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+
+  const dungcuData = useSelector(state => state.dungcu.data);
+  const loading = useSelector(state => state.dungcu.loading);
 
   useEffect(() => {
-
-    const fetchData = async () => {
-        try {
-          
-          const dungcu = await api1.fetchDungCu();
-          
-          console.log('Dữ liệu dụng cụ:', dungcu.data);
-      
-          setdungcuData(dungcu || []);
-        } catch (error) {
-          console.error("Lỗi khi lấy dữ liệu:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-    fetchData();
+    dispatch(fetchDungCu());
   }, []);
 
   const renderItem = ({ item }) => (
@@ -39,23 +26,16 @@ const ListDungCu = () => {
 
   return (
     <View style={styles.container}>
-      {/* Thanh tiêu đề */}
       <View style={styles.header}>
-        {/* Nút Back */}
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-
-        {/* Tiêu đề */}
         <Text style={styles.title}>Dụng cụ chăm sóc</Text>
-
-        {/* Nút Giỏ hàng */}
         <TouchableOpacity onPress={() => console.log('Đi đến giỏ hàng')} style={styles.iconButton}>
           <Ionicons name="cart-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
 
-      {/* Kiểm tra xem đang tải dữ liệu không */}
       {loading ? (
         <ActivityIndicator size="large" color="green" style={styles.loader} />
       ) : (

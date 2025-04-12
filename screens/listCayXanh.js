@@ -2,29 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import api from '../api';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCayXanh } from '../redux/Slide/CayXanhSlide';
 
 const ListCayXanh = () => {
-  const [cayxanhData, setcayxanhData] = useState([]); // Dữ liệu chậu cây từ API
-  const [loading, setLoading] = useState(true);
-  const navigation = useNavigation(); // Lấy đối tượng navigation
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const [selectedSize, setSelectedSize] = useState('Tất cả'); // bộ lọc mặc định
+
+  const cayxanhData = useSelector(state => state.cayxanh.data);
+  const loading = useSelector(state => state.cayxanh.loading);
+  const error = useSelector(state => state.cayxanh.error);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await api.get('/cayxanh'); // Gọi API lấy danh sách chậu cây
-        console.log('Dữ liệu cây xanh:', response.data);
+    dispatch(fetchCayXanh());
+  }, [dispatch]);
 
-        setcayxanhData(response.data); // Lưu dữ liệu vào state
-      } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const filterData = () => {
+    if (selectedSize === 'Tất cả') return cayxanhData;
+    return cayxanhData.filter(item => item.kichco === selectedSize.toLowerCase());
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.productItem}>
@@ -34,41 +31,61 @@ const ListCayXanh = () => {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return <ActivityIndicator size="large" color="green" style={styles.loader} />;
+  }
+
+  if (error) {
+    return <Text style={styles.errorText}>Lỗi: {error}</Text>;
+  }
+
   return (
     <View style={styles.container}>
-      {/* Thanh tiêu đề */}
+      {/* Header */}
       <View style={styles.header}>
-        {/* Nút Back */}
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-
-        {/* Tiêu đề */}
         <Text style={styles.title}>Cây Trồng</Text>
-
-        {/* Nút Giỏ hàng */}
-        <TouchableOpacity onPress={() => console.log('Đi đến giỏ hàng')} style={styles.iconButton}>
+        <TouchableOpacity onPress={() => navigation.navigate('GioHang')} style={styles.iconButton}>
           <Ionicons name="cart-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
 
-      {/* Kiểm tra xem đang tải dữ liệu không */}
-      {loading ? (
-        <ActivityIndicator size="large" color="green" style={styles.loader} />
-      ) : (
-        <FlatList
-          data={cayxanhData}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-        />
-      )}
+      {/* Bộ lọc kích cỡ */}
+      <View style={styles.filterContainer}>
+        {['Tất cả', 'Nhỏ', 'Vừa', 'Lớn'].map(size => (
+          <TouchableOpacity
+            key={size}
+            onPress={() => setSelectedSize(size)}
+            style={[
+              styles.filterButton,
+              selectedSize === size && styles.selectedFilterButton
+            ]}
+          >
+            <Text
+              style={[
+                styles.filterText,
+                selectedSize === size && styles.selectedFilterText
+              ]}
+            >
+              {size}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Danh sách sản phẩm */}
+      <FlatList
+        data={filterData()}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        renderItem={renderItem}
+        contentContainerStyle={styles.list}
+      />
     </View>
   );
 };
-
-export default ListCayXanh;
 
 const styles = StyleSheet.create({
   container: {
@@ -78,6 +95,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 10,
+    paddingBottom: 20,
   },
   productItem: {
     flex: 1,
@@ -130,4 +148,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+    paddingHorizontal: 10,
+  },
+  filterButton: {
+    backgroundColor: '#EEE',
+    paddingVertical: 6,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    marginHorizontal: 5,
+  },
+  selectedFilterButton: {
+    backgroundColor: 'green',
+  },
+  filterText: {
+    color: '#000',
+    fontWeight: '500',
+  },
+  selectedFilterText: {
+    color: '#FFF',
+  },
 });
+
+export default ListCayXanh;

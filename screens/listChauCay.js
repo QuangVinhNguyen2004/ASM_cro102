@@ -2,29 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import api from '../api';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchChauCay } from '../redux/Slide/ChauCaySlide';
 
 const ProductListScreen = () => {
-  const [chaucayData, setChaucayData] = useState([]); // Dữ liệu chậu cây từ API
-  const [loading, setLoading] = useState(true);
-  const navigation = useNavigation(); // Lấy đối tượng navigation
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+
+  const chaucayData = useSelector(state => state.chaucay.data);
+  const loading = useSelector(state => state.chaucay.loading);
+  const error = useSelector(state => state.chaucay.error);
+  const [selectedSize, setSelectedSize] = useState('Tất cả');
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await api.get('/chaucay'); // Gọi API lấy danh sách chậu cây
-        console.log('Dữ liệu chậu cây:', response.data);
+    dispatch(fetchChauCay());
+  }, [dispatch]);
 
-        setChaucayData(response.data); // Lưu dữ liệu vào state
-      } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const filterData = () => {
+    if (selectedSize === 'Tất cả') return chaucayData;
+    return chaucayData.filter(item => item.kichco?.toLowerCase() === selectedSize.toLowerCase());
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity style={styles.productItem}>
@@ -34,36 +31,52 @@ const ProductListScreen = () => {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return <ActivityIndicator size="large" color="green" style={styles.loader} />;
+  }
+
+  if (error) {
+    return <Text style={styles.errorText}>Lỗi: {error}</Text>;
+  }
+
   return (
     <View style={styles.container}>
-      {/* Thanh tiêu đề */}
+      {/* Header */}
       <View style={styles.header}>
-        {/* Nút Back */}
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-
-        {/* Tiêu đề */}
         <Text style={styles.title}>Chậu cây trồng</Text>
-
-        {/* Nút Giỏ hàng */}
-        <TouchableOpacity onPress={() => console.log('Đi đến giỏ hàng')} style={styles.iconButton}>
+        <TouchableOpacity onPress={() => navigation.navigate('GioHang')} style={styles.iconButton}>
           <Ionicons name="cart-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
 
-      {/* Kiểm tra xem đang tải dữ liệu không */}
-      {loading ? (
-        <ActivityIndicator size="large" color="green" style={styles.loader} />
-      ) : (
-        <FlatList
-          data={chaucayData}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-        />
-      )}
+      {/* Bộ lọc kích cỡ */}
+      <View style={styles.filterContainer}>
+        {['Tất cả', 'nhỏ', 'vừa', 'lớn'].map(size => (
+          <TouchableOpacity
+            key={size}
+            onPress={() => setSelectedSize(size)}
+            style={[
+              styles.filterButton,
+              selectedSize === size && styles.filterButtonActive,
+            ]}
+          >
+            <Text style={selectedSize === size ? styles.filterTextActive : styles.filterText}>
+              {size}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <FlatList
+        data={filterData()}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        renderItem={renderItem}
+        contentContainerStyle={styles.list}
+      />
     </View>
   );
 };
@@ -78,6 +91,7 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 10,
+    paddingBottom: 20,
   },
   productItem: {
     flex: 1,
@@ -129,5 +143,36 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginVertical: 10,
+  },
+  filterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 20,
+  },
+  filterButtonActive: {
+    backgroundColor: 'green',
+    borderColor: 'green',
+  },
+  filterText: {
+    color: '#333',
+    fontSize: 14,
+  },
+  filterTextActive: {
+    color: 'white',
+    fontSize: 14,
   },
 });

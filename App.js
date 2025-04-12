@@ -1,7 +1,17 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StatusBar } from 'react-native';
+import { Provider } from 'react-redux';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { configureStore } from '@reduxjs/toolkit';
+import cartReducer from './redux/Slide/CartSlide'; // import reducer từ cartSlice
+import cayxanhReducer from './redux/Slide/CayXanhSlide';
+import chaucayReducer from './redux/Slide/ChauCaySlide';
+import accountSlice from './redux/Slide/accountSlice';
+
 import LoginScreen from './screens/dangnhap';
 import RegisterScreen from './screens/dangky';
+import ProductManagementScreen from './screens/qlsp';
 import HomeScreen from './screens/Home';
 import ProfileScreen from './screens/profile';
 import SearchScreen from './screens/timkiem';
@@ -10,13 +20,21 @@ import ProductListScreen  from './screens/listChauCay';
 import ListDungCu from './screens/listDungCu';
 import ListCayXanh from './screens/listCayXanh';
 import CartScreen from './screens/giohang';
-import CayTrongChiTietScreen from './screens/cayxanhct';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import CayTrongChiTiet from './screens/cayxanhct';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';  // Để sử dụng biểu tượng
-// Khai báo Stack
-const Stack = createNativeStackNavigator();
+
+// Cấu hình Redux store
+const store = configureStore({
+  reducer: {
+    cart: cartReducer, // cartSlice reducer
+    cayxanh:cayxanhReducer,
+    chaucay:chaucayReducer,
+   
+  },
+});
+
+const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
  // Khai báo Tab
  const TabNavigator = () => {
@@ -52,13 +70,12 @@ const Tab = createBottomTabNavigator();
     </Tab.Navigator>
   );
 };
-
-export default function App() {
+const App = () => {
   return (
-    <>
-      <StatusBar barStyle="light-content" />
+    <Provider store={store}> {/* Cung cấp Redux store cho toàn bộ app */}
+      <StatusBar barStyle="dark-content" />
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login">
+      <Stack.Navigator initialRouteName="Login">
           <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Register" component={RegisterScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Menu" component={TabNavigator} />
@@ -67,12 +84,15 @@ export default function App() {
           <Stack.Screen options={{ headerShown: false }} name="ListCayXanh" component={ListCayXanh} />
           <Stack.Screen options={{ headerShown: false }} name="ListDungCu" component={ListDungCu} />
           <Stack.Screen options={{ headerShown: false }} name="GioHang" component={CartScreen} />
-          <Stack.Screen options={{ headerShown: false }} name="CayTrongChiTiet" component={CayTrongChiTietScreen} />
+          <Stack.Screen options={{ headerShown: false }} name="CayTrongChiTiet" component={CayTrongChiTiet} />
           <Stack.Screen options={{ headerShown: false }} name="Notification" component={NotificationScreen} />
           <Stack.Screen options={{ headerShown: false }} name="Profile" component={ProfileScreen} />
+          <Stack.Screen options={{ headerShown: false }} name="qlsp" component={ProductManagementScreen} />
         
         </Stack.Navigator>
       </NavigationContainer>
-    </>
+    </Provider>
   );
-}
+};
+
+export default App;

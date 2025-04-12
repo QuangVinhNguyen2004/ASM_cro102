@@ -12,7 +12,7 @@ const NotificationScreen = () => {
       message: 'Đặt hàng thành công',
       productName: 'Spider Plant',
       description: 'Ủa bông - 2 sản phẩm',
-      image: 'https://via.placeholder.com/50',
+      image: 'https://tiki.vn/blog/wp-content/uploads/2023/10/cay-canh-phong-thuy-768x480.jpg',
     },
   ]);
 

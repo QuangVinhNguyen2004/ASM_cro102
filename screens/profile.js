@@ -30,9 +30,11 @@ const ProfileScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Bảo mật và Điều khoản</Text>
         <TouchableOpacity style={styles.option}><Text style={styles.optionText}>Điều khoản và điều kiện</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.option}><Text style={styles.optionText}>Chính sách quyền riêng tư</Text></TouchableOpacity>
-      </View>
 
+      </View>
+      <TouchableOpacity style={styles.logoutButton} onPress={() => navigation.navigate('qlsp')}>
+        <Text style={styles.logoutText}>Quản lý sản phẩm</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.logoutButton} onPress={() => navigation.navigate('Login')}>
         <Text style={styles.logoutText}>Đăng xuất</Text>
       </TouchableOpacity>
